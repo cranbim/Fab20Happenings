@@ -15,12 +15,13 @@ var nothing;
 var message="By Dave Webb @crispysmokedweb"
 +" // "
 +"A two minute journey into recent moments, nearby spaces that are neither here, nor now."
++" / "
++"Press the other button to begin"
 +" // "
 +"An instantaneous action occupies a time and a space that never exist again. When we observe, we are really examining our sense impressions and recollections, plus prior assumptions. In these times when video meetings have become a norm for many more of us, there is that sense that here and now do not have a single objective point. That instant is divided between my blink and you observing it, from another place a few milliseconds later. What happen in the time between those two moments? Where did the blink, in fact occur? .My now is someone else’s past. Their now is my future. We are meeting, not in a place, but as an arrangement of electrons in a server. Here and Now are not what we thought they were."
 +" // "
-+"This does not work on mobile, sorry. You will need a desktop browser with a webcam"
-+" / "
-+"Press the other button to begin";
++"This does not work on mobile, sorry. You will need a desktop browser with a webcam";
+
 var reader, title;
 
 function preload(){
@@ -59,7 +60,7 @@ function draw() {
     // console.log()
     fs.addFrame(img);
   }
-  background(40);
+  background(0);
   if(started){
     fch.run();
   } else {
