@@ -43,7 +43,7 @@ function setup() {
   capture.elt.setAttribute('playsinline', '');
   fcs=new FrameChunksSlit(fs,(width-winRef)/2,0,winRef,winRef);
   
-  reader=new Reader(message,winRef*0.2,winRef*0.25,winRef*0.7,winRef*0.7,0.04);
+  reader=new Reader(message,winRef*0.2,winRef*0.25,winRef*0.7,winRef*0.7,0.035);
   title=new Reader("OTHERwhere ELSEwhen",winRef*0.2,winRef*0,winRef*0.5,winRef*0.25,0.15);
 }
 
