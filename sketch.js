@@ -3,6 +3,7 @@ var fs;
 var fsSize=150;
 var frameStep=2;
 var fcs;
+var fch;
 var img;
 var button;
 var started=false;
@@ -43,7 +44,7 @@ function setup() {
   capture.hide();
   capture.elt.setAttribute('playsinline', '');
   fcs=new FrameChunksSlit(fs,(width-winRef)/2,0,winRef,winRef);
-  
+  fch=new FrameChunksShuffle(fs,(width-winRef)/2,0,winRef,winRef);
   reader=new Reader(message,winRef*0.2,winRef*0.25,winRef*0.7,winRef*0.7,0.035);
   title=new Reader("OTHERwhere ELSEwhen",winRef*0.2,winRef*0,winRef*0.5,winRef*0.25,0.15);
 }
@@ -58,7 +59,7 @@ function draw() {
   }
   background(40);
   if(started){
-    fcs.run();
+    fch.run();
   } else {
     title.show(true);
     reader.show(false);
@@ -219,6 +220,109 @@ function Reader(message,x,y,w,h,s){
       }
       pop();
     }
+  }
+}
+
+function FrameChunksShuffle(fs,x,y,dw,dh){
+  var numFrames=49;
+  var numSteps=7;
+  var hSteps=numSteps;
+  var hStep;
+  var vStep;
+  var frameOrder=fillArrayWithNumbers(numFrames);
+  var frameStep=2;
+  var paused=false;
+  var slits;
+  var myCount=0;
+  
+  var slitStarted=false;
+  hStep=dw/hSteps;
+  vStep=hStep;
+  frameOrder.forEach(function(fr,i){
+    // translate((i%hSteps+0.5)*hStep, (floor(i/hSteps)+0.5)*vStep);
+    var tw=1*1/hSteps;//random(0.1,1);
+    var xOff=(i%hSteps)*1/hSteps;//random(1-tw);
+    var yOff=floor(i/hSteps)*1/hSteps;//random(1-tw);
+    fr.slit=false;//random(10)<1;
+    fr.x=xOff;
+    fr.y=yOff;
+    fr.w=tw;
+    fr.h=tw;
+    fr.occW=1;
+    fr.occH=1;
+    fr.i=0;
+    fr.ho=1;//random(10)<5?-1:1;
+    fr.rot=0;//floor(random(4));
+    fr.col=color(random(255),random(255),random(255));
+    fr.tint=false;random(10)<1;
+  });
+  
+  this.run=function(){
+    myCount++;
+    var fl=fs.getSize();
+    imageMode(CENTER);
+    rectMode(CENTER);
+    // if(fl>0){
+    //   image(fs.getFrame(0), 0,0);
+    // }
+    push();
+    translate(x,y);
+    
+    for(var i=0; i<numFrames; i++){
+      var foi=frameOrder[i].i;
+      // var d=dist(hSteps/2,hSteps/2,i%hSteps,floor(i/hSteps));
+      // var frd=floor(d)*5;
+        
+      if(foi<fl){//foi<fl
+        var fi=fs.getFrame((foi));//foi
+        // console.log(fi.width, fi.height, hStep, vStep);
+        push();
+        translate((i%hSteps+0.5)*hStep, (floor(i/hSteps)+0.5)*vStep);
+        // console.log(d);
+        rotate(frameOrder[i].rot*PI/2);
+        scale(frameOrder[i].ho,1);
+        if(frameOrder[i].slit){
+          fi=fs.getFrame(0);
+          image(fi, -hStep/4,0, hStep/2, vStep,
+              0, 0, fi.width/2, fi.height);
+          image(fs.getSlits(),hStep/4,0,hStep/2, vStep, 0,0,fi.width/4,fi.height);
+        } else {
+          image(fi, 0,0, hStep*frameOrder[i].occW, vStep*frameOrder[i].occH,
+              fi.width*frameOrder[i].x, fi.height*frameOrder[i].y, fi.width*frameOrder[i].w, fi.height*frameOrder[i].h );
+          if(frameOrder[i].tint){
+            fill(red(frameOrder[i].col),green(frameOrder[i].col),blue(frameOrder[i].col),100);
+            noStroke();
+            rect(0,0,hStep,vStep);
+          }
+          // fill(255,0,200);
+          // rect(0,0,hStep,vStep);
+        }
+        pop();
+      }
+      // var tw=(1.1+sin((frameCount+i*10)*PI/500))*1/hSteps;
+      // frameOrder[i].w=tw;
+      // frameOrder[i].h=tw;
+      
+    }
+    pop();
+    if(myCount>120 && myCount%10===0){
+      var i=floor(random(frameOrder.length));
+      mutate(i);
+    }
+  };
+  
+  function mutate(i){
+    var fr=frameOrder[i];
+    var tw=random(0.6,1)*1/hSteps;
+    frameOrder[i].w=tw;
+    frameOrder[i].h=tw;
+    var xOff=(i%hSteps+0.5)*1/hSteps-tw/2;//random(1-tw);
+    var yOff=(floor(i/hSteps)+0.5)*1/hSteps-tw/2;//random(1-tw);
+    frameOrder[i].x=xOff;
+    frameOrder[i].y=yOff;
+    fr.ho=random(10)<5?-1:1;
+    fr.rot=floor(random(4));
+    frameOrder[i].i=floor(random(fs.getSize()));
   }
 }
 
