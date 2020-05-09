@@ -64,8 +64,8 @@ function draw() {
   if(started){
     fch.run();
   } else {
-    title.show(true);
-    reader.show(false);
+    title.show(true,true);
+    reader.show(false,false);
     button.show();
 
   }
@@ -113,8 +113,8 @@ function Reader(message,x,y,w,h,s){
   
   analyseText(w,h);
   
-  this.show=function(ca){
-    renderText(x,y,w,h,yOff,ca);
+  this.show=function(ca,no){
+    renderText(x,y,w,h,yOff,ca,no);
   };
   
   function analyseText(w,h){
@@ -169,7 +169,7 @@ function Reader(message,x,y,w,h,s){
     textMaxY=yOff+pitch;
   }
   
-  function renderText(x,y,w,h,yOff,ca){
+  function renderText(x,y,w,h,yOff,ca,no){
     push();
     translate(x,y);
     blendMode(BLEND);
@@ -185,16 +185,16 @@ function Reader(message,x,y,w,h,s){
     textSize(ts);
     textAlign(CENTER, CENTER);
     words.forEach(function(word){
-      placeWord(word,x,y,w,h,yOff,ca);
+      placeWord(word,x,y,w,h,yOff,ca,no);
     });
     pop();
   }
   
-  function placeWord(word,x,y,w,h,yOff,ca){
+  function placeWord(word,x,y,w,h,yOff,ca,no){
     if(word.y-yOff>-w*textSizeRel && word.y-yOff<h+w*textSizeRel){
       push();
       translate(word.x,word.y-yOff);
-      var shift=(noise(word.x/100, word.y/10+frameCount/10)-0.5)*word.ts*0.5;
+      var shift=no?(noise(word.x/100, word.y/10+frameCount/10)-0.5)*word.ts*0.5:0;
   
       var sh=word.flipH?sin(frameCount*word.flipCycle):1;
       var sv=word.flipV?sin(frameCount*word.flipCycle*0.7):1;
