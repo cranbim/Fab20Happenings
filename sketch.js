@@ -2,23 +2,27 @@ var fMain;
 var fs;
 var fsSize=150;
 var frameStep=2;
-var fcs;
-var fch;
+// var fcs;
+// var fch;
+var frameChunks=[];
+var currentChunk=0;
 var img;
 var button;
 var started=false;
 
 var capture;
-var nothing;
+var duration=1500;
+
+
 
 
 var message="By Dave Webb @crispysmokedweb"
 +" // "
 +"A two minute journey into recent moments, nearby spaces that are neither here, nor now."
 +" / "
-+"Press the other button to begin"
++"Press the OTHER button to begin."
 +" // "
-+"An instantaneous action occupies a time and a space that never exist again. When we observe, we are really examining our sense impressions and recollections, plus prior assumptions. In these times when video meetings have become a norm for many more of us, there is that sense that here and now do not have a single objective point. That instant is divided between my blink and you observing it, from another place a few milliseconds later. What happen in the time between those two moments? Where did the blink, in fact occur? .My now is someone else’s past. Their now is my future. We are meeting, not in a place, but as an arrangement of electrons in a server. Here and Now are not what we thought they were."
++"A moment occupies a time and space that never exists again. When we observe it we are really examining our recent sense impressions and recollections, through a set of prior beliefs. In these times when video calling has become a norm for many more of us, there is that sense that here and now do not occupy a single objective point. That instant is divided between my blink and you observing it from another place a few milliseconds later. My now is your past. Your now is my future. What happens in the time between those two moments? Where did the blink, in fact, occur? Our common space is an assemblage of electron states and flows in servers, cables and routers, who knows where in the world. Here and now are no longer what they seem."
 +" // "
 +"This does not work on mobile, sorry. You will need a desktop browser with a webcam";
 
@@ -46,8 +50,10 @@ function setup() {
   capture = createCapture(VIDEO);
   capture.hide();
   capture.elt.setAttribute('playsinline', '');
-  fcs=new FrameChunksSlit(fs,(width-winRef)/2,0,winRef,winRef);
-  fch=new FrameChunksShuffle(fs,(width-winRef)/2,0,winRef,winRef);
+  frameChunks.push(new FrameChunksOriginal(fs,(width-winRef)/2,0,winRef,winRef));
+  frameChunks.push(new FrameChunkRad(fs,(width-winRef)/2,0,winRef,winRef));
+  frameChunks.push(new FrameChunksSlit(fs,(width-winRef)/2,0,winRef,winRef));
+  frameChunks.push(new FrameChunksShuffle(fs,(width-winRef)/2,0,winRef,winRef));
   reader=new Reader(message,winRef*0.2,winRef*0.25,winRef*0.7,winRef*0.7,0.035);
   title=new Reader("OTHERwhere ELSEwhen",winRef*0.2,winRef*0,winRef*0.5,winRef*0.25,0.15);
 }
@@ -62,7 +68,10 @@ function draw() {
   }
   background(0);
   if(started){
-    fch.run();
+    if(!frameChunks[currentChunk].run()){
+      currentChunk=(currentChunk+1)%frameChunks.length;
+      frameChunks[currentChunk].reset();
+    }
   } else {
     title.show(true,true);
     reader.show(false,false);
@@ -237,6 +246,8 @@ function FrameChunksShuffle(fs,x,y,dw,dh){
   var paused=false;
   var slits;
   var myCount=0;
+  var ttlMax=duration;
+  var ttl=ttlMax;
   
   var slitStarted=false;
   hStep=dw/hSteps;
@@ -259,6 +270,28 @@ function FrameChunksShuffle(fs,x,y,dw,dh){
     fr.col=color(random(255),random(255),random(255));
     fr.tint=false;random(10)<1;
   });
+  
+  this.reset=function(){
+    ttl=ttlMax;
+    frameOrder.forEach(function(fr,i){
+      // translate((i%hSteps+0.5)*hStep, (floor(i/hSteps)+0.5)*vStep);
+      var tw=1*1/hSteps;//random(0.1,1);
+      var xOff=(i%hSteps)*1/hSteps;//random(1-tw);
+      var yOff=floor(i/hSteps)*1/hSteps;//random(1-tw);
+      fr.slit=false;//random(10)<1;
+      fr.x=xOff;
+      fr.y=yOff;
+      fr.w=tw;
+      fr.h=tw;
+      fr.occW=1;
+      fr.occH=1;
+      fr.i=0;
+      fr.ho=1;//random(10)<5?-1:1;
+      fr.rot=0;//floor(random(4));
+      fr.col=color(random(255),random(255),random(255));
+      fr.tint=false;random(10)<1;
+    });
+  }
   
   this.run=function(){
     myCount++;
@@ -308,10 +341,13 @@ function FrameChunksShuffle(fs,x,y,dw,dh){
       
     }
     pop();
-    if(myCount>120 && myCount%10===0){
+    if(myCount>60 && myCount%10===0){
       var i=floor(random(frameOrder.length));
       mutate(i);
     }
+    ttl--;
+    console.log(ttl);
+    return ttl>0;
   };
   
   function mutate(i){
@@ -343,6 +379,8 @@ function FrameChunksSlit(fs,x,y,dw,dh){
   var slits;
   var slitStarted=false;
   // var img;
+  var ttlMax=duration;
+  var ttl=ttlMax;
 
   hStep=dw/hSteps;
   vStep=hStep
@@ -364,6 +402,10 @@ function FrameChunksSlit(fs,x,y,dw,dh){
     fr.col=color(random(255),random(255),random(255));
     fr.tint=random(10)<1;
   });
+  
+  this.reset=function(){
+    ttl=ttlMax;
+  };
   
   this.run=function(){
     var fl=fs.getSize();
@@ -402,5 +444,215 @@ function FrameChunksSlit(fs,x,y,dw,dh){
   
     }
     pop();
+    ttl--;
+    console.log(ttl);
+    return ttl>0;
   };
 }
+
+function FrameChunkRad(fs,x,y,dw,dh){
+  var numFrames=225;
+  var numSteps=15;
+  var hSteps=numSteps;
+  var hStep;
+  var vStep;
+  var frameOrder=fillArrayWithNumbers(numFrames);
+  var frameStep=2;
+  var paused=false;
+  var slits;
+  var ttlMax=duration;
+  var ttl=ttlMax;
+  
+  var slitStarted=false;
+  hStep=dw/hSteps;
+  vStep=hStep;
+  frameOrder.forEach(function(fr,i){
+    // translate((i%hSteps+0.5)*hStep, (floor(i/hSteps)+0.5)*vStep);
+    var tw=1*1/hSteps;//random(0.1,1);
+    var xOff=(i%hSteps+0.5)*1/hSteps-tw;//random(1-tw);
+    var yOff=(floor(i/hSteps)+0.5)*1/hSteps-tw;//random(1-tw);
+    fr.slit=false;//random(10)<1;
+    fr.x=xOff;
+    fr.y=yOff;
+    fr.w=tw;
+    fr.h=tw;
+    fr.occW=1;
+    fr.occH=1;
+    fr.ho=1;//random(10)<5?-1:1;
+    fr.rot=0;//floor(random(4));
+    fr.col=color(random(255),random(255),random(255));
+    fr.tint=false;random(10)<1;
+  });
+  
+  this.reset=function(){
+    ttl=ttlMax;
+  };
+  
+  
+  this.run=function(){
+    var fl=fs.getSize();
+    imageMode(CENTER);
+    rectMode(CENTER);
+    // if(fl>0){
+    //   image(fs.getFrame(0), 0,0);
+    // }
+    var mx=sin(frameCount*PI/350)*0.5+0.5;
+    var my=sin(frameCount*PI/200)*0.5+0.5;
+    var delay=floor(mx*10);
+    push();
+    translate(x,y);
+    for(var i=0; i<numFrames; i++){
+      var foi=frameOrder[i].i;
+      var d=dist(hSteps/2,hSteps/2,i%hSteps,floor(i/hSteps));
+      var frd=floor(d*delay);
+        
+      if(frd<fl){//foi<fl
+        var fi=fs.getFrame((frd));//foi
+        push();
+        translate((i%hSteps+0.5)*hStep, (floor(i/hSteps)+0.5)*vStep);
+        rotate(frameOrder[i].rot*PI/2);
+        // scale(frameOrder[i].ho,1);
+        if(frameOrder[i].slit){
+          fi=fs.getFrame(0);
+          image(fi, -hStep/4,0, hStep/2, vStep,
+              0, 0, fi.width/2, fi.height);
+          image(fs.getSlits(),hStep/4,0,hStep/2, vStep, 0,0,fi.width/4,fi.height);
+        } else {
+          // fill(255,0,255);
+          // stroke(0,0,255);
+          // rect(0,0,hStep,vStep);
+          image(fi, 0,0, hStep, vStep,
+              fi.width*frameOrder[i].x, fi.height*frameOrder[i].y, fi.width*frameOrder[i].w, fi.height*frameOrder[i].h );
+          if(frameOrder[i].tint){
+            fill(red(frameOrder[i].col),green(frameOrder[i].col),blue(frameOrder[i].col),100);
+            noStroke();
+            rect(0,0,hStep,vStep);
+          }
+        }
+        pop();
+      }
+      var twNow=(1.5+sin((frameCount+d*10)*PI/200))*1*1/hSteps;
+      var tw=lerp(1/hSteps,twNow,my);
+      
+      frameOrder[i].w=tw;
+      frameOrder[i].h=tw;
+      var xOff=(i%hSteps+0.5)*1/hSteps-tw/2;//random(1-tw);
+      var yOff=(floor(i/hSteps)+0.5)*1/hSteps-tw/2;//random(1-tw);
+      frameOrder[i].x=xOff;
+      frameOrder[i].y=yOff;
+    }
+    pop();
+    ttl--;
+    console.log(ttl);
+    return ttl>0;
+  };
+}
+
+
+function FrameChunksOriginal(fs,x,y,dw,dh){
+  var numSteps=5;
+  var numFrames=25;
+  var hSteps=numSteps;
+  var hStep;
+  var vStep;
+  var frameOrder=fillArrayWithNumbers(numFrames);
+  var frameStep=5;
+  var ttlMax=duration;
+  var ttl=ttlMax;
+  
+  hStep=dw/hSteps;
+  vStep=hStep;
+  frameOrder.forEach(function(fr){
+    var tw=random(0.1,1);
+    var xOff=random(1-tw);
+    var yOff=random(1-tw);
+    fr.x=xOff;
+    fr.y=yOff;
+    fr.w=tw;
+    fr.h=tw;
+    fr.ho=random(10)<5?-1:1;
+    fr.rot=floor(random(4));
+    fr.col=color(random(255),random(255),random(255));
+    fr.tint=random(10)<1;
+  });
+  
+  this.reset=function(){
+    ttl=ttlMax;
+  }
+  
+  this.run=function(){
+    var fl=fs.getSize();
+    imageMode(CENTER);
+    // if(fl>0){
+    //   image(fs.getFrame(0), 0,0);
+    // }
+    push();
+    translate(x,y);
+    for(var i=0; i<numFrames; i++){
+      var foi=frameOrder[i].i;
+      if(foi<fl){
+        var fi=fs.getFrame(foi);
+        // console.log(fi.width, fi.height, hStep, vStep);
+        push();
+        translate((i%hSteps+0.5)*hStep, (floor(i/hSteps)+0.5)*vStep);
+        rotate(frameOrder[i].rot*PI/2);
+        scale(frameOrder[i].ho,1);
+        // if(frameOrder[i].tint){
+        //   tint(frameOrder[i].col);
+        //   // filter(INVERT);
+        // } else {
+        //   tint(255);
+        // }
+        image(fi, 0,0, hStep, vStep,
+              fi.width*frameOrder[i].x, fi.height*frameOrder[i].y, fi.width*frameOrder[i].w, fi.height*frameOrder[i].h );
+        pop();
+      }
+    }
+    pop();
+    if(random(10)<1){
+      var f=floor(random(numFrames));
+      fr=frameOrder[f];
+      var tw=random(0.1,1);
+      var xOff=random(1-tw);
+      var yOff=random(1-tw);
+      fr.x=xOff;
+      fr.y=yOff;
+      fr.w=tw;
+      fr.h=tw;
+      fr.ho=random(10)<5?-1:1;
+      fr.rot=floor(random(4));
+      fr.col=color(random(255),random(255),random(255));
+      fr.tint=random(10)<1;
+    }
+    if(random(25)<1){
+      frameOrder=shuffle2Bits(frameOrder);
+    }
+    ttl--;
+    console.log(ttl);
+    return ttl>0;
+  };
+}
+
+function shuffleArray(a) {
+    var j, x, i;
+    for (i = a.length - 1; i > 0; i--) {
+        j = Math.floor(Math.random() * (i + 1));
+        x = a[i];
+        a[i] = a[j];
+        a[j] = x;
+    }
+    return a;
+}
+
+function shuffle2Bits(a) {
+  var j, x, i;
+  i=floor(random(a.length));
+  j = Math.floor(Math.random() * (i));
+  
+  x = a[i];
+  a[i] = a[j];
+  a[j] = x;
+  return a;
+}
+
+
