@@ -19,8 +19,8 @@ var duration=1500;
 var message="By Dave Webb @crispysmokedweb"
 +" // "
 +"A two minute journey into recent moments, nearby spaces that are neither here, nor now."
-+" / "
-+"Press the OTHER button to begin."
++" // "
++"Allow the webcam. Press the OTHER button to begin."
 +" // "
 +"A moment occupies a time and space that never exists again. When we observe it we are really examining our recent sense impressions and recollections, through a set of prior beliefs. In these times when video calling has become a norm for many more of us, there is that sense that here and now do not occupy a single objective point. That instant is divided between my blink and you observing it from another place a few milliseconds later. My now is your past. Your now is my future. What happens in the time between those two moments? Where did the blink, in fact, occur? Our common space is an assemblage of electron states and flows in servers, cables and routers, who knows where in the world. Here and now are no longer what they seem."
 +" // "
@@ -50,11 +50,11 @@ function setup() {
   capture = createCapture(VIDEO);
   capture.hide();
   capture.elt.setAttribute('playsinline', '');
-  frameChunks.push(new FrameChunksOriginal(fs,(width-winRef)/2,0,winRef,winRef));
   frameChunks.push(new FrameChunkRad(fs,(width-winRef)/2,0,winRef,winRef));
+  frameChunks.push(new FrameChunksOriginal(fs,(width-winRef)/2,0,winRef,winRef));
   frameChunks.push(new FrameChunksSlit(fs,(width-winRef)/2,0,winRef,winRef));
   frameChunks.push(new FrameChunksShuffle(fs,(width-winRef)/2,0,winRef,winRef));
-  reader=new Reader(message,winRef*0.2,winRef*0.25,winRef*0.7,winRef*0.7,0.035);
+  reader=new Reader(message,winRef*0.2,winRef*0.25,winRef*0.7,winRef*0.7,0.032);
   title=new Reader("OTHERwhere ELSEwhen",winRef*0.2,winRef*0,winRef*0.5,winRef*0.25,0.15);
 }
 
