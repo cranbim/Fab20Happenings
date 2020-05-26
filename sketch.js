@@ -11,7 +11,7 @@ var button;
 var started=false;
 
 var capture;
-var duration=1500;
+var duration=900;
 
 
 
